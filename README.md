@@ -42,7 +42,9 @@ Seule la classe `RapportMission` est une entité JPA.
 
 ## Diagramme UML
 
-Le diagramme conceptuel est dans `docs/architecture.puml`.
+- `docs/architecture.puml` : diagramme conceptuel (packages, associations, multiplicités), écrit à la main.
+- `docs/diagramme-classes.puml` : diagramme de classes généré automatiquement depuis le code avec l'extension VS Code **LSP UML** (clic droit sur `src/main/java/fr/astrouphf` > LSP-UML > Class Diagram, puis *Save PlantUML Source*). Il contient les 32 types avec leurs attributs, méthodes et relations d'héritage/implémentation. Il est trop large pour l'aperçu intégré de LSP UML (limite 4096 px) : l'ouvrir avec l'extension PlantUML ou sur plantuml.com.
+
 Pour un diagramme généré depuis le vrai code dans VS Code, l'extension recommandée est **LSP UML**. Elle interroge le serveur de langage du projet Java, permet une actualisation lors de l'enregistrement et la navigation des classes vers leur source. L'extension `UML Generator for Java` peut aussi générer des fichiers PlantUML à partir d'un dossier Java.
 
 ## Choix métier intégrés
