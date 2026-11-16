@@ -1,0 +1,377 @@
+@startuml
+title java
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam defaultFontName Sans-Serif
+hide empty members
+
+package "(root)" {
+  class "Main" as Main {
+    main(String[])() : : void
+  }
+}
+
+package "engins" {
+  interface "Cartographe" as Cartographe {
+    cartographier(Zone, LocalDateTime)() : : ResultatExploration
+  }
+  interface "Deplacable" as Deplacable {
+    deplacer(Position)() : : void
+  }
+  class "Drone" as Drone {
+    Drone(int, String, Position, NiveauDanger)(int id, String nom, Position position, NiveauDanger resistanceDanger)
+    deplacer(Position)() : : void
+    cartographier(Zone, LocalDateTime)() : : ResultatExploration
+    necessiteAtmosphere()() : : boolean
+    competenceRequise()() : : Competence
+  }
+  class "Engin" as Engin {
+    id : int id
+    nom : String nom
+    position : Position position
+    etat : EtatEngin etat
+    missionEnCours : Mission missionEnCours
+    resistanceDanger : NiveauDanger resistanceDanger
+    Engin(int, String, Position, NiveauDanger)(int id, String nom, Position position, NiveauDanger resistanceDanger)
+    getId()() : : int
+    getNom()() : : String
+    getPosition()() : : Position
+    getEtat()() : : EtatEngin
+    getResistanceDanger()() : : NiveauDanger
+    getMissionEnCours()() : : Mission
+    changerPosition(Position)() : : void
+    estDisponible()() : : boolean
+    affecterMission(Mission)() : : void
+    libererMission()() : : void
+    mettreEnPanne()() : : void
+    remettreEnService()() : : void
+    peutAcceder(Zone)() : : boolean
+    necessiteAtmosphere()() : : boolean
+    competenceRequise()() : : Competence
+  }
+  enum "EtatEngin" as EtatEngin {
+    DISPONIBLE : DISPONIBLE
+    EN_MISSION : EN_MISSION
+    EN_PANNE : EN_PANNE
+  }
+  interface "Preleveur" as Preleveur {
+    prelever(Zone, Random, LocalDateTime)() : : ResultatExploration
+  }
+  class "Rover" as Rover {
+    Rover(int, String, Position, NiveauDanger)(int id, String nom, Position position, NiveauDanger resistanceDanger)
+    deplacer(Position)() : : void
+    prelever(Zone, Random, LocalDateTime)() : : ResultatExploration
+    competenceRequise()() : : Competence
+  }
+}
+
+package "exploration" {
+  class "Echantillon" as Echantillon {
+    type : TypeEchantillon type
+    masse : double masse
+    Echantillon(TypeEchantillon, double)(TypeEchantillon type, double masse)
+  }
+  class "ResultatExploration" as ResultatExploration {
+    zone : Zone zone
+    engin : Engin engin
+    action : TypeActionExploration action
+    echantillon : Echantillon echantillon
+    date : LocalDateTime date
+    ResultatExploration(Zone, Engin, TypeActionExploration, Echantillon, LocalDateTime)(Zone zone, Engin engin, TypeActionExploration action, Echantillon echantillon, LocalDateTime date)
+  }
+  enum "TypeActionExploration" as TypeActionExploration {
+    PRELEVEMENT : PRELEVEMENT
+    CARTOGRAPHIE : CARTOGRAPHIE
+  }
+  enum "TypeEchantillon" as TypeEchantillon {
+    ROCHE : ROCHE
+    GLACE : GLACE
+    POUSSIERE : POUSSIERE
+  }
+}
+
+package "gestion" {
+  class "AgenceSpatiale" as AgenceSpatiale {
+    MAX_MISSIONS_SIMULTANEES = 2
+    personnes : Map<Integer, Personne> personnes
+    engins : Map<Integer, Engin> engins
+    corpsCelestes : Map<String, CorpsCeleste> corpsCelestes
+    missions : List<Mission> missions
+    persisteurRapport : Consumer<RapportMission> persisteurRapport
+    AgenceSpatiale()()
+    AgenceSpatiale(Consumer<RapportMission>)(Consumer<RapportMission> persisteurRapport)
+    ajouterPersonne(Personne)() : : void
+    ajouterEngin(Engin)() : : void
+    ajouterCorpsCeleste(CorpsCeleste)() : : void
+    planifierMission(Mission)() : : void
+    verifierPersonneEnregistree(Personne)() : : void
+    lancerMissionSuivante(SimulateurMission)() : : Optional<Future<?>>
+    verifierConditionsDemarrage(Mission)() : : void
+    finaliserMission(Mission)() : : void
+    promouvoirCadet(Cadet)() : : Operateur
+    changerTuteur(Cadet, Operateur)() : : void
+    getMissionsPlanifiees()() : : List<Mission>
+    getMissionsTermineesParBudget()() : : List<Mission>
+    getEnginsParEtat()() : : Map<EtatEngin, List<Engin>>
+    getOperateursDisponibles()() : : List<Operateur>
+    getOperateursOccupes()() : : List<Operateur>
+    getZonesExploreesParInteret(CorpsCeleste)() : : List<Zone>
+    getEchantillonsParType(Mission)() : : Map<TypeEchantillon, List<Echantillon>>
+    getMissions()() : : List<Mission>
+    getPersonnes()() : : List<Personne>
+    getEngins()() : : List<Engin>
+    getCorpsCelestes()() : : List<CorpsCeleste>
+  }
+}
+
+package "missions" {
+  enum "EtatMission" as EtatMission {
+    PLANIFIEE : PLANIFIEE
+    EN_COURS : EN_COURS
+    TERMINEE : TERMINEE
+  }
+  class "Mission" as Mission {
+    nom : String nom
+    dateLancement : LocalDateTime dateLancement
+    budget : double budget
+    etat : EtatMission etat
+    corpsCeleste : CorpsCeleste corpsCeleste
+    directeur : DirecteurMission directeur
+    operateurs : Set<Operateur> operateurs
+    engins : Set<Engin> engins
+    zonesObjectifs : Set<Zone> zonesObjectifs
+    resultats : List<ResultatExploration> resultats
+    cadetsParticipants : Set<Cadet> cadetsParticipants
+    confirmationsReexploration : Set<ZoneEnginKey> confirmationsReexploration
+    rapport : RapportMission rapport
+    Mission(String, LocalDateTime, double, CorpsCeleste, DirecteurMission, Set<Operateur>, Set<Engin>, Set<Zone>)(String nom, LocalDateTime dateLancement, double budget, CorpsCeleste corpsCeleste, DirecteurMission directeur, Set<Operateur> operateurs, Set<Engin> engins, Set<Zone> zonesObjectifs)
+    copieNonVide(Set<T>, String) <T>() : : Set<T>
+    getNom()() : : String
+    getDateLancement()() : : LocalDateTime
+    getBudget()() : : double
+    getEtat()() : : EtatMission
+    getCorpsCeleste()() : : CorpsCeleste
+    getDirecteur()() : : DirecteurMission
+    getOperateurs()() : : Set<Operateur>
+    getEngins()() : : Set<Engin>
+    getZonesObjectifs()() : : Set<Zone>
+    getResultats()() : : List<ResultatExploration>
+    getCadetsParticipants()() : : Set<Cadet>
+    getRapport()() : : RapportMission
+    confirmerReexploration(Zone, Class<? extends Engin>)() : : void
+    reexplorationAutorisee(Zone, Class<? extends Engin>)() : : boolean
+    demarrer(Set<Cadet>)() : : void
+    enregistrerResultat(ResultatExploration)() : : void
+    getZonesExplorees()() : : Set<Zone>
+    calculerTauxReussite()() : : double
+    estReussie()() : : boolean
+    terminer()() : : RapportMission
+  }
+  class "Mission.ZoneEnginKey" as Mission_ZoneEnginKey {
+    zone : Zone zone
+    typeEngin : Class<? extends Engin> typeEngin
+  }
+  class "RapportMission" as RapportMission {
+    id : Long id
+    nomMission : String nomMission
+    dateCloture : LocalDateTime dateCloture
+    nomCorpsCeleste : String nomCorpsCeleste
+    nbZonesExplorees : int nbZonesExplorees
+    nbEchantillons : int nbEchantillons
+    interetScientifiqueTotal : int interetScientifiqueTotal
+    reussite : boolean reussite
+    budget : double budget
+    RapportMission()()
+    RapportMission(String, LocalDateTime, String, int, int, int, boolean, double)(String nomMission, LocalDateTime dateCloture, String nomCorpsCeleste, int nbZonesExplorees, int nbEchantillons, int interetScientifiqueTotal, boolean reussite, double budget)
+    getId()() : : Long
+    getNomMission()() : : String
+    getDateCloture()() : : LocalDateTime
+    getNomCorpsCeleste()() : : String
+    getNbZonesExplorees()() : : int
+    getNbEchantillons()() : : int
+    getInteretScientifiqueTotal()() : : int
+    isReussite()() : : boolean
+    getBudget()() : : double
+  }
+}
+
+package "monde" {
+  class "Carte" as Carte {
+    largeur : int largeur
+    hauteur : int hauteur
+    zones : Zone[][] zones
+    Carte(Zone[][])(Zone[][] zones)
+    getLargeur()() : : int
+    getHauteur()() : : int
+    getZone(Position)() : : Zone
+    getZones()() : : List<Zone>
+    getZonesExplorees()() : : List<Zone>
+    contient(Zone)() : : boolean
+  }
+  class "CorpsCeleste" as CorpsCeleste {
+    nom : String nom
+    atmosphere : boolean atmosphere
+    carte : Carte carte
+    CorpsCeleste(String, boolean, Carte)(String nom, boolean atmosphere, Carte carte)
+    getNom()() : : String
+    possedeAtmosphere()() : : boolean
+    getCarte()() : : Carte
+    tauxExploration()() : : double
+  }
+  enum "NiveauDanger" as NiveauDanger {
+    FAIBLE : FAIBLE
+    MODERE : MODERE
+    ELEVE : ELEVE
+    EXTREME : EXTREME
+    niveau : int niveau
+    NiveauDanger(int)(int niveau)
+    estAccessibleAvec(NiveauDanger)() : : boolean
+  }
+  class "Position" as Position {
+    x : int x
+    y : int y
+    Position(int, int)(int x, int y)
+  }
+  enum "TypeTerrain" as TypeTerrain {
+    PLAINE : PLAINE
+    CRATERE : CRATERE
+    FALAISE : FALAISE
+    GLACE : GLACE
+  }
+  class "Zone" as Zone {
+    position : Position position
+    typeTerrain : TypeTerrain typeTerrain
+    interetScientifique : int interetScientifique
+    niveauDanger : NiveauDanger niveauDanger
+    explorationsReussies : Map<Class<? extends Engin>, Integer> explorationsReussies
+    Zone(Position, TypeTerrain, int, NiveauDanger)(Position position, TypeTerrain typeTerrain, int interetScientifique, NiveauDanger niveauDanger)
+    Zone(Position, TypeTerrain, int)(Position position, TypeTerrain typeTerrain, int interetScientifique)
+    verifierInteret(int)() : : void
+    getPosition()() : : Position
+    getTypeTerrain()() : : TypeTerrain
+    getInteretScientifique()() : : int
+    getNiveauDanger()() : : NiveauDanger
+    augmenterInteretScientifique(int)() : : void
+    decouvrirVie()() : : void
+    aDejaEteExploreePar(Class<? extends Engin>)() : : boolean
+    getNombreExplorationsPar(Class<? extends Engin>)() : : int
+    enregistrerExploration(Class<? extends Engin>)() : : void
+    estExploree()() : : boolean
+    getHistoriqueExplorations()() : : Map<Class<? extends Engin>, Integer>
+  }
+}
+
+package "persistance" {
+  class "RapportMissionRepository" as RapportMissionRepository {
+    factory : EntityManagerFactory factory
+    RapportMissionRepository()()
+    enregistrer(RapportMission)() : : void
+    trouverTous()() : : List<RapportMission>
+    trouverParCorpsCeleste(String)() : : List<RapportMission>
+    close()() : : void
+  }
+}
+
+package "personnes" {
+  class "Cadet" as Cadet {
+    tuteur : Operateur tuteur
+    missionsReussies : int missionsReussies
+    Cadet(int, String, String, Genre, String, Operateur)(int id, String nom, String prenom, Genre genre, String telephone, Operateur tuteur)
+    getTuteur()() : : Operateur
+    getMissionsReussies()() : : int
+    changerTuteur(Operateur)() : : void
+    enregistrerMissionReussie()() : : void
+    peutEtrePromu()() : : boolean
+  }
+  enum "Competence" as Competence {
+    PILOTAGE_ROVER : PILOTAGE_ROVER
+    PILOTAGE_DRONE : PILOTAGE_DRONE
+    GEOLOGIE : GEOLOGIE
+    TELECOMMUNICATIONS : TELECOMMUNICATIONS
+    ENERGIE : ENERGIE
+  }
+  class "DirecteurMission" as DirecteurMission {
+    missionsDirigees : Set<Mission> missionsDirigees
+    DirecteurMission(int, String, String, Genre, String)(int id, String nom, String prenom, Genre genre, String telephone)
+    ajouterMission(Mission)() : : void
+    getMissionsDirigees()() : : Set<Mission>
+    calculerBudgetMissionsReussies()() : : double
+  }
+  enum "Genre" as Genre {
+    MASCULIN : MASCULIN
+    FEMININ : FEMININ
+    AUTRE : AUTRE
+  }
+  class "Operateur" as Operateur {
+    competences : EnumSet<Competence> competences
+    missionEnCours : Mission missionEnCours
+    cadetsEncadres : Set<Cadet> cadetsEncadres
+    Operateur(int, String, String, Genre, String, Set<Competence>)(int id, String nom, String prenom, Genre genre, String telephone, Set<Competence> competences)
+    getCompetences()() : : Set<Competence>
+    possedeCompetence(Competence)() : : boolean
+    estDisponible()() : : boolean
+    getMissionEnCours()() : : Mission
+    affecterMission(Mission)() : : void
+    libererMission()() : : void
+    ajouterCadet(Cadet)() : : void
+    retirerCadet(Cadet)() : : void
+    getCadetsEncadres()() : : Set<Cadet>
+  }
+  class "Personne" as Personne {
+    id : int id
+    nom : String nom
+    prenom : String prenom
+    genre : Genre genre
+    telephone : String telephone
+    Personne(int, String, String, Genre, String)(int id, String nom, String prenom, Genre genre, String telephone)
+    texteObligatoire(String, String)() : : String
+    getId()() : : int
+    getNom()() : : String
+    getPrenom()() : : String
+    getGenre()() : : Genre
+    getTelephone()() : : String
+    setTelephone(String)() : : void
+  }
+}
+
+package "simulation" {
+  class "ConfigurationSimulation" as ConfigurationSimulation {
+    tempsParZoneMillis : long tempsParZoneMillis
+    probabiliteExploration : double probabiliteExploration
+    probabilitePanne : double probabilitePanne
+    probabiliteDecouverteVie : double probabiliteDecouverteVie
+    graineAleatoire : long graineAleatoire
+    nombreThreads : int nombreThreads
+    ConfigurationSimulation(long, double, double, double, long, int)(long tempsParZoneMillis, double probabiliteExploration, double probabilitePanne, double probabiliteDecouverteVie, long graineAleatoire, int nombreThreads)
+    verifierProbabilite(double, String)() : : void
+    parDefaut()() : : ConfigurationSimulation
+  }
+  class "SimulateurMission" as SimulateurMission {
+    configuration : ConfigurationSimulation configuration
+    executor : ExecutorService executor
+    SimulateurMission(ConfigurationSimulation)(ConfigurationSimulation configuration)
+    lancerSimulation(Mission, Consumer<Mission>)() : : Future<?>
+    simuler(Mission)() : : void
+    trouverEnginsCompatibles(Mission, Zone)() : : List<Engin>
+    close()() : : void
+  }
+}
+
+Cadet --|> Personne
+DirecteurMission --|> Personne
+Drone ..|> Cartographe
+Drone ..|> Deplacable
+Drone --|> Engin
+Operateur --|> Personne
+Rover ..|> Deplacable
+Rover --|> Engin
+Rover ..|> Preleveur
+
+note as PARTIAL_DATA
+Partial data — this diagram is not a complete picture:
+* inheritance partial — the language server exposes no type hierarchy for some types
+* associations missing — typed member references were not resolved
+end note
+@enduml
