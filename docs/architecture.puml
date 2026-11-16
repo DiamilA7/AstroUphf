@@ -1,0 +1,138 @@
+@startuml AstroUPHF
+' Diagramme conceptuel d'AstroUPHF (package fr.astrouphf)
+skinparam classAttributeIconSize 0
+hide empty members
+
+package personnes {
+  abstract class Personne {
+    - id : int
+    - nom : String
+    - prenom : String
+    - genre : Genre
+    - telephone : String
+  }
+  class DirecteurMission
+  class Operateur {
+    - competences : EnumSet<Competence>
+  }
+  class Cadet
+  enum Genre
+  enum Competence
+  Personne <|-- DirecteurMission
+  Personne <|-- Operateur
+  Personne <|-- Cadet
+  Personne --> Genre
+  Operateur --> "*" Competence
+  Operateur "1 tuteur" -- "*" Cadet : encadre >
+}
+
+package engins {
+  abstract class Engin {
+    - nom : String
+    - position : Position
+    - etat : EtatEngin
+    - resistanceDanger : NiveauDanger
+  }
+  interface Deplacable
+  interface Cartographe
+  interface Preleveur
+  class Rover
+  class Drone
+  enum EtatEngin
+  Engin <|-- Rover
+  Engin <|-- Drone
+  Deplacable <|.. Rover
+  Preleveur <|.. Rover
+  Deplacable <|.. Drone
+  Cartographe <|.. Drone
+  Engin --> EtatEngin
+}
+
+package monde {
+  class CorpsCeleste {
+    - nom : String
+  }
+  class Carte {
+    - largeur : int
+    - hauteur : int
+  }
+  class Zone {
+    - interetScientifique : int
+    - explorationsReussies : Map<Class<? extends Engin>, Integer>
+  }
+  record Position {
+    x : int
+    y : int
+  }
+  enum TypeTerrain
+  enum NiveauDanger
+  CorpsCeleste *-- "1" Carte
+  Carte *-- "*" Zone
+  Zone --> Position
+  Zone --> TypeTerrain
+  Zone --> NiveauDanger
+}
+
+package exploration {
+  record ResultatExploration {
+    date : LocalDateTime
+  }
+  record Echantillon {
+    masse : double
+  }
+  enum TypeActionExploration
+  enum TypeEchantillon
+  ResultatExploration --> Zone
+  ResultatExploration --> Engin
+  ResultatExploration --> TypeActionExploration
+  ResultatExploration --> "0..1" Echantillon
+  Echantillon --> TypeEchantillon
+}
+
+package missions {
+  class Mission {
+    - nom : String
+    - dateLancement : LocalDateTime
+    + confirmerReexploration(zone, typeEngin)
+  }
+  class RapportMission <<Entity JPA>> {
+    - id : Long
+    - nomMission : String
+    - dateCloture : LocalDateTime
+    - nomCorpsCeleste : String
+  }
+  enum EtatMission
+  Mission --> EtatMission
+  Mission --> "1" CorpsCeleste
+  Mission --> "1" DirecteurMission
+  Mission --> "*" Operateur
+  Mission --> "*" Engin
+  Mission --> "*" Zone : objectifs
+  Mission *-- "*" ResultatExploration
+  Mission --> "*" Cadet : participants
+  Mission ..> RapportMission : produit
+}
+
+package gestion {
+  class AgenceSpatiale {
+    + {static} MAX_MISSIONS_SIMULTANEES : int = 2
+  }
+  AgenceSpatiale o-- "*" Personne
+  AgenceSpatiale o-- "*" Engin
+  AgenceSpatiale o-- "*" CorpsCeleste
+  AgenceSpatiale o-- "*" Mission
+}
+
+package simulation {
+  class SimulateurMission
+  record ConfigurationSimulation
+  SimulateurMission --> ConfigurationSimulation
+  SimulateurMission ..> Mission : exécute
+}
+
+package persistance {
+  class RapportMissionRepository
+  RapportMissionRepository ..> RapportMission : JPA / H2
+}
+
+@enduml
